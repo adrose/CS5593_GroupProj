@@ -128,6 +128,7 @@ reg_tree_imp <- function(formula, data, minsize) {
   
   # calculate fitted values
   leafs <- tree_info[tree_info$TERMINAL == "LEAF", ]
+  leafs$PREDVAL <- NA
   fitted <- c()
   # Adding a fix for broken rownames
   rownames(data) <- seq(1:dim(data)[1])
@@ -136,7 +137,10 @@ reg_tree_imp <- function(formula, data, minsize) {
     ind <- as.numeric(rownames(subset(data, eval(parse(text = leafs[i, "FILTER"])))))
     # estimator is the mean y value of the leaf
     fitted[ind] <- mean(y[ind])
+    # Now return the pred val
+    leafs[i,"PREDVAL"] <- mean(y[ind]) 
   }
+  tree_info <- merge(tree_info, leafs, all=T)
   
   # calculate feature importance
   imp <- tree_info[, c("SPLIT", "IMP_GINI")]
@@ -193,7 +197,7 @@ run_rf <- function(formula, n_trees=250, feature_frac=.5, data=in.dat, min_node=
     imp.vals <- tree$importance
     target <- as.data.frame(features)
     imp.vals <- merge(target, imp.vals, by.x="features", by.y="FEATURES", all=T)
-    out.list <- list(fit = fit.vals, imp = imp.vals)
+    out.list <- list(fit = fit.vals, imp = imp.vals, splits = tree$tree)
   }
   # extract fit
   fits <- NULL 
@@ -206,7 +210,41 @@ run_rf <- function(formula, n_trees=250, feature_frac=.5, data=in.dat, min_node=
   # build the mean feature importance between all trees
   imp <- apply(imp_full[,-1] ,1, function(x) mean(x, na.rm=T))
   imp <- cbind(as.character(imp_full[,1]), imp)
+  ## Now create a list with all of the trees
+  trees_out <- list()
+  for(i in 1:n_trees){trees_out[[i]] <- trees[[i]]$splits}
   # export
-  return(list(fit = rf_fit,importance = imp))
+  return(list(fit = rf_fit,importance = imp, forest = trees_out))
 }
 
+## Now create a function which will predict values from unseen data
+pred_new_rf <- function(rf_fit, data){
+  ## Prepare the output
+  n_trees <- length(rf_fit[["forest"]])
+  n_obs <- dim(data)[1]
+  ## Create a matrix with all predictions
+  pred_mat <- matrix(NA, nrow = n_obs, ncol = n_trees)
+  # Now obtain the predicted values across all trees
+  # Adding a fix for broken rownames
+  rownames(data) <- seq(1:dim(data)[1])
+  for(l in 1:n_trees){
+    ## Grab the tree
+    tree_info <- as.data.frame(rf_fit[["forest"]][l])
+    # calculate fitted values
+    leafs <- tree_info[tree_info$TERMINAL == "LEAF", ]
+    fitted <- c()
+    for (i in seq_len(nrow(leafs))) {
+      # extract index
+      ind <- as.numeric(rownames(subset(data, eval(parse(text = leafs[i, "FILTER"])))))
+      # estimator is the mean y value of the leaf
+      # Return if length of ind is > 0
+      if(length(ind)>0){
+        pred_mat[ind,l] <- leafs$PREDVAL[i]
+      }
+    }
+  }
+  ## Now take the mean across all of these
+  pred_val <- apply(pred_mat, 1, mean)
+  ## Now return the pred_val
+  return(pred_val)
+}

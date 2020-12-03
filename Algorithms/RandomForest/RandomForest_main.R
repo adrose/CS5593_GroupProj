@@ -5,6 +5,7 @@ rm(list=ls())
 # Parallel backend functions
 library(foreach)
 library(doParallel)
+source("./Algorithms/RandomForest/RandomForestFunctions.R")
 
 source("./Algorithms/RandomForest/RandomForestFunctions.R")
 states <- c("Alabama", "Alaska", "Arizona", "Arkansas", "California", "Colorado",
@@ -27,6 +28,8 @@ x.vars <-colnames(in.dat)[which(colnames(in.dat) %in%   states == FALSE)[-1]]
 form.val <- as.formula(paste(Y, "~", paste(x.vars, collapse = "+")))
 
 # Declare the model
-registerDoParallel(7)
-mod.1 <- run_rf(formula=form.val, n_trees = 250, feature_frac = .75, data=in.dat, min_node = 3)
-
+registerDoParallel(5)
+mod.1 <- run_rf(formula=form.val, n_trees = 250, feature_frac = .75, data=in.dat[1:100,], min_node = 3)
+mod.1.pred <- pred_new_rf(rf_fit = mod.1, data = in.dat[101:130,])
+mod.2 <- run_rf(formula=form.val, n_trees = 250, feature_frac = .75, data=in.dat[1:130,], min_node = 3)
+mod.2.pred <- pred_new_rf(rf_fit = mod.2, data=in.dat[131:161,])
