@@ -12,14 +12,20 @@ sse_var <- function(x, y) {
 }
 
 ## Now create a function which will create the regression trees
-reg_tree_imp <- function(formula, data, minsize) {
+reg_tree_imp<-function(formula, data, minsize) {
   
   # coerce to data.frame
-  data <- as.data.frame(data)
-  
   # handle formula
   #if(class(formula)!="formula"){formula <- as.formula(formula)}
   #formula <- terms.formula(formula)
+  
+  # Hey Adon, for some reason, your code doesn't recognize these functions(?)
+  # After googling, seems like foreach requires that they are called again explicitly.
+  # Dunno why, but it worked when I adapted it to
+  # my rolling_cross_validation.R function for the GUI - Ricardo
+  # Also, not sure where it goes but I'm trying here
+  
+  sse_var <- sse_var
   
   # get the design matrix
   X <- model.matrix(formula, data)
@@ -160,11 +166,30 @@ reg_tree_imp <- function(formula, data, minsize) {
 
 ## Now create a function which will train the random forest
 # load plyr
-run_rf <- function(formula, n_trees=250, feature_frac=.5, data=in.dat, min_node=5) {
+run_rf <- function(formula, n_trees, feature_frac, data, min_node) {
   ## Create our forest in parallel
+  
+  # Hey Adon, for some reason, your code doesn't recognize these functions(?)
+  # After googling, seems like foreach requires that they are called again explicitly.
+  # Dunno why, but it worked when I adapted it to
+  # my rolling_cross_validation.R function for the GUI - Ricardo
+  # Also, not sure where it goes but I'm trying here
+  
+  reg_tree_imp <- reg_tree_imp
+  sse_var <- sse_var
+  
   trees <- foreach::foreach(i=1:n_trees)  %dopar%{
     # extract features
     features <- all.vars(formula)[-1]
+    
+    # Hey Adon, for some reason, your code doesn't recognize these functions(?)
+    # After googling, seems like foreach requires that they are called again explicitly.
+    # Dunno why, but it worked when I adapted it to
+    # my rolling_cross_validation.R function for the GUI - Ricardo
+    # Also, not sure where it goes but I'm trying here
+    
+    reg_tree_imp <- reg_tree_imp
+    sse_var <- sse_var
     
     # extract target
     target <- all.vars(formula)[1]
@@ -180,13 +205,16 @@ run_rf <- function(formula, n_trees=250, feature_frac=.5, data=in.dat, min_node=
                               replace = FALSE)
     
     # create new formula
-    formula_new <-
-      as.formula(paste0(target, " ~ -1 + ", paste0(features_sample,
+    formula_new <- as.formula(paste0(target, " ~ -1 + ", paste0(features_sample,
                                                    collapse =  " + ")))
     # fit the regression tree
-    tree <- reg_tree_imp(formula = formula_new,
-                         data = train,
-                         minsize = min_node)
+    
+    tree <- reg_tree_imp(formula = formula_new, data = train, minsize = min_node)
+    
+    # tree <- reg_tree_imp(formula = formula_new,
+    #                      data = train,
+    #                      minsize = min_node)
+    
     ## Now return a column of the predicted values; one per observation
     fit.vals <- cbind(index, tree$fit)[order(index),]
     fit.vals <- as.data.frame(unique(fit.vals))

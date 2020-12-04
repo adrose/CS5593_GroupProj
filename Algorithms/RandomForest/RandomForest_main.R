@@ -1,6 +1,3 @@
-## Clear cache
-rm(list=ls())
-
 ## Load library(s)/Declare statics
 # Parallel backend functions
 library(foreach)
