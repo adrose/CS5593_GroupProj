@@ -23,7 +23,7 @@ reg_tree_imp<-function(formula, data, minsize) {
   # After googling, seems like foreach requires that they are called again explicitly.
   # Dunno why, but it worked when I adapted it to
   # my rolling_cross_validation.R function for the GUI - Ricardo
-  # Also, not sure where it goes but I'm trying here
+  # Also, not sure where it goes but I'm trying here.
   
   sse_var <- sse_var
   
@@ -173,7 +173,7 @@ run_rf <- function(formula, n_trees, feature_frac, data, min_node) {
   # After googling, seems like foreach requires that they are called again explicitly.
   # Dunno why, but it worked when I adapted it to
   # my rolling_cross_validation.R function for the GUI - Ricardo
-  # Also, not sure where it goes but I'm trying here
+  # Also, not sure where it goes but I'm trying here.
   
   reg_tree_imp <- reg_tree_imp
   sse_var <- sse_var
@@ -186,7 +186,7 @@ run_rf <- function(formula, n_trees, feature_frac, data, min_node) {
     # After googling, seems like foreach requires that they are called again explicitly.
     # Dunno why, but it worked when I adapted it to
     # my rolling_cross_validation.R function for the GUI - Ricardo
-    # Also, not sure where it goes but I'm trying here
+    # Also, not sure where it goes but I'm trying here.
     
     reg_tree_imp <- reg_tree_imp
     sse_var <- sse_var
