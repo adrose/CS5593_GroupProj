@@ -38,7 +38,7 @@ body <- dashboardBody(
             "changes over time"),
             
             selectizeInput("timeline_state", "Choose up to five states:",
-                        c("Alabama", "Alaska", "Arizona", "Arkansas", "California", "Colorado",
+                        c("USA","Alabama", "Alaska", "Arizona", "Arkansas", "California", "Colorado",
                           "Connecticut", "Delaware", "District of Columbia", "Florida", "Georgia",
                           "Hawaii", "Idaho", "Illinois", "Indiana", "Iowa", "Kansas", "Kentucky",
                           "Louisiana", "Maine", "Maryland", "Massachusetts", "Michigan", "Minnesota",
@@ -111,15 +111,16 @@ body <- dashboardBody(
                          collapsible = TRUE, status = "primary",
                          
                          tableOutput("svr_cross")),
+                         # plotOutput("svr_hist")),
                      
                      box(title = "Inputs", solidHeader = TRUE,
-                         collapsible = TRUE, status = "primary", height = 790,
+                         collapsible = TRUE, status = "primary",
                          
                          helpText("Placeholder text for SVR Cross"),
                          helpText("First, choose cross validation settings"),
                          
                          selectizeInput("svr_state", "Choose a single state:",
-                                        c("Alabama", "Alaska", "Arizona", "Arkansas", "California", "Colorado",
+                                        c("USA","Alabama", "Alaska", "Arizona", "Arkansas", "California", "Colorado",
                                           "Connecticut", "Delaware", "District of Columbia", "Florida", "Georgia",
                                           "Hawaii", "Idaho", "Illinois", "Indiana", "Iowa", "Kansas", "Kentucky",
                                           "Louisiana", "Maine", "Maryland", "Massachusetts", "Michigan", "Minnesota",
@@ -137,11 +138,11 @@ body <- dashboardBody(
                          
                          numericInput("svr_start_size",
                                       "Choose size of starting train set",
-                                      value = 100, min = 100, max = 120),
+                                      value = 120, min = 100, max = 120),
                          
                          numericInput("svr_k",
                                       "Choose size of rolling test set",
-                                      value = 10, min = 10, max = 40),
+                                      value = 40, min = 10, max = 40),
                          
                          helpText("Defining the hyperparameter grid"),
                          
@@ -168,10 +169,102 @@ body <- dashboardBody(
                          
                          )
                      ),
-            # Some other model
-            fluidRow(),
-            # Last model
-            fluidRow(),
+            # Some other model - Ranfom Forest
+            fluidRow(box(title = "Random Forest", solidHeader = TRUE,
+                         collapsible = TRUE, status = "success",
+                         
+                         tableOutput("rf_cross")),
+                         # plotOutput("rf_hist")),
+                     
+                     box(title = "Inputs", solidHeader = TRUE,
+                         collapsible = TRUE, status = "success",
+                         
+                         helpText("Placeholder text for RF Cross. Only the first 5 parameters are used to showcase the model,
+                                  as it takes quite a while to run!"),
+                         helpText("First, choose cross validation settings"),
+                         
+                         selectizeInput("rf_state", "Choose a single state:",
+                                        c("USA","Alabama", "Alaska", "Arizona", "Arkansas", "California", "Colorado",
+                                          "Connecticut", "Delaware", "District of Columbia", "Florida", "Georgia",
+                                          "Hawaii", "Idaho", "Illinois", "Indiana", "Iowa", "Kansas", "Kentucky",
+                                          "Louisiana", "Maine", "Maryland", "Massachusetts", "Michigan", "Minnesota",
+                                          "Mississippi", "Missouri", "Montana", "Nebraska", "Nevada", "New Hampshire",
+                                          "New Jersey", "New Mexico", "New York", "North Carolina", "North Dakota",
+                                          "Ohio", "Oklahoma", "Oregon", "Pennsylvania", "Rhode Island", "South Carolina",
+                                          "South Dakota", "Tennessee", "Texas", "Utah", "Vermont", "Virginia", "Washington",
+                                          "West Virginia", "Wisconsin", "Wyoming"),
+                                        options = list(maxItems = 1),
+                                        selected = "Alabama"),
+                         
+                         numericInput("rf_start_size",
+                                      "Choose size of starting train set",
+                                      value = 120, min = 100, max = 120),
+                         
+                         numericInput("rf_k",
+                                      "Choose size of rolling test set",
+                                      value = 40, min = 10, max = 40),
+                         
+                         helpText("Defining the hyperparameter grid"),
+                         
+                         numericInput("rf_ntrees",
+                                      "Choose Max. number of trees (between 5 to 10).",
+                                      min = 5, max = 10, value = 5),
+                         
+                         numericInput("rf_featurefrac",
+                                      "Choose Max. feature frac (between 0.5 to 0.75)",
+                                      min = 0.5, max = 0.75, value = 0.5),
+                         
+                         numericInput("rf_minnode",
+                                      "Choose Max. min number of nodes (between 2 to 5)",
+                                      min = 2, max = 5, value = 2),
+                         
+                         submitButton("Submit")
+                         
+                     )),
+            # Last model - KNN
+            fluidRow(box(title = "KNN", solidHeader = TRUE,
+                         collapsible = TRUE, status = "warning",
+                         
+                         tableOutput("knn_cross")),
+                         # plotOutput("rf_hist")),
+                     
+                     box(title = "Inputs", solidHeader = TRUE,
+                         collapsible = TRUE, status = "warning",
+                         
+                         helpText("Placeholder text for KNN Cross. Only the first 5 parameters are used to showcase the model,
+                                  as it takes quite a while to run!"),
+                         helpText("First, choose cross validation settings"),
+                         
+                         selectizeInput("knn_state", "Choose a single state:",
+                                        c("USA","Alabama", "Alaska", "Arizona", "Arkansas", "California", "Colorado",
+                                          "Connecticut", "Delaware", "District of Columbia", "Florida", "Georgia",
+                                          "Hawaii", "Idaho", "Illinois", "Indiana", "Iowa", "Kansas", "Kentucky",
+                                          "Louisiana", "Maine", "Maryland", "Massachusetts", "Michigan", "Minnesota",
+                                          "Mississippi", "Missouri", "Montana", "Nebraska", "Nevada", "New Hampshire",
+                                          "New Jersey", "New Mexico", "New York", "North Carolina", "North Dakota",
+                                          "Ohio", "Oklahoma", "Oregon", "Pennsylvania", "Rhode Island", "South Carolina",
+                                          "South Dakota", "Tennessee", "Texas", "Utah", "Vermont", "Virginia", "Washington",
+                                          "West Virginia", "Wisconsin", "Wyoming"),
+                                        options = list(maxItems = 1),
+                                        selected = "Alabama"),
+                         
+                         numericInput("knn_start_size",
+                                      "Choose size of starting train set",
+                                      value = 120, min = 100, max = 120),
+                         
+                         numericInput("knn_k",
+                                      "Choose size of rolling test set",
+                                      value = 40, min = 10, max = 40),
+                         
+                         helpText("Defining the hyperparameter grid"),
+                         
+                         numericInput("knn_n",
+                                      "Choose Max. number of neighboors (between 2 to 15).",
+                                      min = 2, max = 15, value = 2),
+                         
+                         submitButton("Submit")
+                         
+                     )),
           )
       ),
   
