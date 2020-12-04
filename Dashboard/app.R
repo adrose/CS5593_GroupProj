@@ -1,9 +1,10 @@
-# Libraries used
+# Libraries used for dashboard and plotting
 library(shiny)
 library(shinydashboard)
 library(ggplot2)
 library(reshape)
 library(wordcloud)
+library(fpp2)
 
 # Defining work environments
 dashboard_location <- getwd()
@@ -188,6 +189,9 @@ server <- function(input, output){
     
   })
   
+  # This creates a histogram -- but it's commented out
+  # for the presentation, so the code runs faster
+  
   # output$svr_hist <- renderPlot({
   #   
   #   # ------------------------------------------
@@ -276,6 +280,9 @@ server <- function(input, output){
       
     })
     
+    # This creates a histogram -- but it's commented out
+    # for the presentation, so the code runs faster
+  
     # output$rf_hist <- renderPlot({
     #   
     #   # Extracting chosen state
@@ -341,12 +348,234 @@ server <- function(input, output){
       
     })
   
-  # This is the structure for any plot
-  # output$svr_cross <- renderPlot({
-  #   
-  #   
-  #   
-  # })
+    # SVR Predictions
+      output$svr_pred <- renderPlot({
+  
+        # Extracting state
+        state <- input$svr_pred_state
+        
+        # Defining Y
+        Ya <- data[, state]
+        
+        # Scaling Y
+        Y <- scale(Ya)
+        
+        # Extracting X
+        numb_predictors <- input$svr_pred_num_predict
+        Xa <- data[, 54:(54 + numb_predictors)]
+        
+        # Scaling X
+        X <- scale(Xa)
+        
+        ##########################
+        # Now, defining the train/test data
+        
+        # Train
+        train_numb <- input$svr_pred_train
+        train_Y <- Y[1:train_numb]
+        train_X <- X[1:train_numb, ]
+        
+        # Test
+        test_numb <- input$svr_pred_test
+        test_Y <- Y[(train_numb + 1):(train_numb + test_numb)]
+        test_X <- X[(train_numb + 1):(train_numb + test_numb), ]
+        
+        ##########################
+        # Now, defining the hyperparameters
+        
+        # Extracting values from dashboard
+        p1 <- input$svr_pred_poly
+        C <- input$svr_pred_cost
+        e <- input$svr_pred_e
+        ke <- input$svr_pred_ke
+      
+        ##########################
+        # Now, training model
+        # Defining number of train observations
+        n = dim(train_X)[1]
+        
+        # Passing parameters to SVR function
+        model <- svr_model(train_X, train_Y, n, ke, p1, C, e)
+        
+        # Extracting outputs from model
+        beta <- as.matrix(model[[1]])
+        bias <- model[[3]]
+        
+        ########################################################
+        ## Now, test model
+        # Defining number of test observations
+        n = dim(test_X)[1]
+        
+        # Finding Hessian Matrix of test X
+        H_test <- hess_mat_test(test_X, train_X, p1, ke)
+        
+        # Finding predicted values
+        forecasted_vals <- H_test %*% beta + bias
+        
+        #########################################################
+        ## Now plotting
+        # First, converting to time series objects to use the 
+        # nice wrappers in fpp2 library
+        
+        # Unscaling
+        train_Y_unsc <- train_Y * attr(Y, "scaled:scale") + attr(Y, "scaled:center")
+        test_Y_unsc <- test_Y * attr(Y, "scaled:scale") + attr(Y, "scaled:center")
+        forecasted_vals_unsc <- forecasted_vals * attr(Y, "scaled:scale") + attr(Y, "scaled:center")
+        
+        # Converting to ts objects
+        train_Y_ts <- ts(train_Y_unsc, frequency = 1)
+        forecasted_vals_ts <- ts(forecasted_vals_unsc, frequency = 1, start = end(train_Y_ts))
+        test_Y_ts <- ts(test_Y_unsc, frequency = 1, start = end(train_Y_ts))
+        
+        # Now plotting with the fpp2 library wrappers
+        autoplot(train_Y_ts, series = "Train series") +
+          autolayer(test_Y_ts, series = "Test series") +
+          autolayer(forecasted_vals_ts, series = "Predicted series")
+        
+      })
+    
+    # This is the structure for any plot
+    output$rf_pred <- renderPlot({
+
+      # Extracting state
+      state <- input$rf_pred_state
+      
+      # Defining Y
+      Ya <- data.frame(data[, state])
+      colnames(Ya) <- state
+      
+      # Scaling Y
+      Y_attr <- scale(Ya)
+      Y <- data.frame(scale(Ya))
+      
+      # Extracting X
+      Xa <- data[, 54:ncol(data)]
+      
+      # Scaling X
+      X <- scale(Xa)
+
+      ##########################
+      # Now, defining the train/test data
+      
+      # Train
+      train_numb <- input$rf_pred_train
+      train_Y <- data.frame(Y[1:train_numb, ])
+      colnames(train_Y) <- state
+      train_X <- X[1:train_numb, ]
+      
+      # Test
+      test_numb <- input$rf_pred_test
+      test_Y <- data.frame(Y[(train_numb + 1):(train_numb + test_numb), ])
+      colnames(test_Y) <- state
+      test_X <- X[(train_numb + 1):(train_numb + test_numb), ]
+      
+      ##########################
+      ## Now, training model
+      
+      # Extracting Parameters
+      n_trees <- input$rf_pred_ntrees
+      feature_frac <- input$rf_pred_featurefrac
+      min_node <- input$rf_pred_minnode
+
+      # Defining formula
+      formula <- as.formula(paste(colnames(train_Y), "~", paste(colnames(train_X), collapse = "+")))
+      
+      # Combining the train data
+      train_data <- cbind(train_Y, train_X)
+      
+      # Defining parallels
+      registerDoParallel(5)
+      
+      # Training the model
+      mod.1 <- run_rf(formula = formula,
+                      n_trees = n_trees,
+                      feature_frac = feature_frac,
+                      data = train_data,
+                      min_node = min_node)
+      
+      ########################################################
+      ## Now, test model
+      
+      # Combining test data
+      test_data <- cbind(test_Y, test_X)
+      
+      # Test
+      mod.1.pred <- pred_new_rf(rf_fit = mod.1,
+                                data = test_data)
+      
+      #########################################################
+      ## Now plotting
+      # First, converting to time series objects to use the 
+      # nice wrappers in fpp2 library
+      
+      # Unscaling
+      train_Y_unsc <- train_Y * attr(Y_attr, "scaled:scale") + attr(Y_attr, "scaled:center")
+      test_Y_unsc <- test_Y * attr(Y_attr, "scaled:scale") + attr(Y_attr, "scaled:center")
+      mod.1.pred_unsc <- mod.1.pred * attr(Y_attr, "scaled:scale") + attr(Y_attr, "scaled:center")
+      
+      # Converting to ts objects
+      train_Y_ts <- ts(train_Y_unsc, frequency = 1)
+      mod.1.pred_ts <- ts(mod.1.pred_unsc, frequency = 1, start = end(train_Y_ts))
+      test_Y_ts <- ts(test_Y_unsc, frequency = 1, start = end(train_Y_ts))
+      
+      # Now plotting with the fpp2 library wrappers
+      autoplot(train_Y_ts, series = "Train series") +
+        autolayer(test_Y_ts, series = "Test series") +
+        autolayer(mod.1.pred_ts, series = "Predicted series")
+      
+    })
+      
+    # KNN
+    output$knn_pred <- renderPlot({
+
+      # Extracting state
+      state <- input$knn_pred_state
+      
+      # Defining Y
+      Y <- data[, state]
+      
+      # Extracting X
+      X <- data[, 54:ncol(data)]
+      
+      ##########################
+      # Now, defining the train/test data
+      
+      # Train
+      train_numb <- input$knn_pred_train
+      train_Y <- Y[1:train_numb]
+      train_X <- X[1:train_numb, ]
+      
+      # Test
+      test_numb <- input$knn_pred_test
+      test_Y <- Y[(train_numb + 1):(train_numb + test_numb)]
+      test_X <- X[(train_numb + 1):(train_numb + test_numb), ]
+    
+    
+      ## Training
+      fit = train(train_X, train_Y, method = "knn", 
+                  preProcess = c("center", "scale"), 
+                  tuneGrid = expand.grid(k = input$knn_pred_n))
+      
+      # Test
+      test_data <- cbind(test_Y, test_X)
+      vals <- predict(fit, newdata = test_data)
+      
+      #########################################################
+      ## Now plotting
+      # First, converting to time series objects to use the 
+      # nice wrappers in fpp2 library
+      
+      # Converting to ts objects
+      train_Y_ts <- ts(train_Y, frequency = 1)
+      vals_ts <- ts(vals, frequency = 1, start = end(train_Y_ts))
+      test_Y_ts <- ts(test_Y, frequency = 1, start = end(train_Y_ts))
+      
+      # Now plotting with the fpp2 library wrappers
+      autoplot(train_Y_ts, series = "Train series") +
+        autolayer(test_Y_ts, series = "Test series") +
+        autolayer(vals_ts, series = "Predicted series")
+      
+    })
   
 }
 

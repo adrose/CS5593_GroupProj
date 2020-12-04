@@ -104,7 +104,7 @@ body <- dashboardBody(
   # DM Tab
   tabItem(tabName = "DM",
           h1("Data Modeling"),
-          h4("Placeholder for brief tab description"),
+          h4("This tab allows the user to fit several hyperparameters of each model to distinct sets of data to identify the best fit"),
           fluidPage(
             # SVR Model
             fluidRow(box(title = "Support Vector Regression", solidHeader = TRUE,
@@ -116,7 +116,7 @@ body <- dashboardBody(
                      box(title = "Inputs", solidHeader = TRUE,
                          collapsible = TRUE, status = "primary",
                          
-                         helpText("Placeholder text for SVR Cross"),
+                         helpText("These parameters control/modify the SVR model"),
                          helpText("First, choose cross validation settings"),
                          
                          selectizeInput("svr_state", "Choose a single state:",
@@ -179,7 +179,8 @@ body <- dashboardBody(
                      box(title = "Inputs", solidHeader = TRUE,
                          collapsible = TRUE, status = "success",
                          
-                         helpText("Placeholder text for RF Cross. Only the first 5 parameters are used to showcase the model,
+                         helpText("These parameters control/modify the RF model"),
+                         helpText("Only the first 5 parameters are used to showcase the model,
                                   as it takes quite a while to run!"),
                          helpText("First, choose cross validation settings"),
                          
@@ -231,7 +232,8 @@ body <- dashboardBody(
                      box(title = "Inputs", solidHeader = TRUE,
                          collapsible = TRUE, status = "warning",
                          
-                         helpText("Placeholder text for KNN Cross. Only the first 5 parameters are used to showcase the model,
+                         helpText("These parameters control/modify the KNN model"),
+                         helpText("Only the first 5 parameters are used to showcase the model,
                                   as it takes quite a while to run!"),
                          helpText("First, choose cross validation settings"),
                          
@@ -269,18 +271,176 @@ body <- dashboardBody(
       ),
   
   # FOR tab
-  tabItem(tabName = "FOR",
-          h1("Forecasting"),
-          h4("Placeholder for brief tab description"),
-          fluidPage(
-            # Row 1
-            fluidRow(),
-            # Row 2
-            fluidRow()
+    tabItem(tabName = "FOR",
+            h1("Forecasting"),
+            h4("This tab contains three rows (one for each model), and outputs a plot containing the forecasted values
+               of COVID-19 cases for the chosen state."),
+            fluidPage(
+              # Row 1 - SVR Predictions
+              fluidRow(box(title = "SVR", solidHeader = TRUE,
+                           collapsible = TRUE, status = "primary",
+  
+                           plotOutput("svr_pred")),
+                       
+                       box(title = "Inputs", solidHeader = TRUE,
+                           collapsible = TRUE, status = "primary",
+                           
+                           helpText("These inputs control the parameters used to predict cases using
+                                    an Support Vector Regression model"),
+                           helpText("First, choose Data and train/test split"),
+                           
+                           selectizeInput("svr_pred_state", "Choose a single state:",
+                                          c("USA","Alabama", "Alaska", "Arizona", "Arkansas", "California", "Colorado",
+                                            "Connecticut", "Delaware", "District of Columbia", "Florida", "Georgia",
+                                            "Hawaii", "Idaho", "Illinois", "Indiana", "Iowa", "Kansas", "Kentucky",
+                                            "Louisiana", "Maine", "Maryland", "Massachusetts", "Michigan", "Minnesota",
+                                            "Mississippi", "Missouri", "Montana", "Nebraska", "Nevada", "New Hampshire",
+                                            "New Jersey", "New Mexico", "New York", "North Carolina", "North Dakota",
+                                            "Ohio", "Oklahoma", "Oregon", "Pennsylvania", "Rhode Island", "South Carolina",
+                                            "South Dakota", "Tennessee", "Texas", "Utah", "Vermont", "Virginia", "Washington",
+                                            "West Virginia", "Wisconsin", "Wyoming"),
+                                          options = list(maxItems = 1),
+                                          selected = "USA"),
+                           
+                           numericInput("svr_pred_train",
+                                        "Choose size of train data (between 100 to 128)",
+                                        value = 128, min = 100, max = 128),
+                           
+                           numericInput("svr_pred_test",
+                                        "Choose size of test data (between 32 to 60)",
+                                        value = 32, min = 32, max = 60),
+                           
+                           numericInput("svr_pred_num_predict",
+                                        "Choose number of predictors (between 10 to 410)",
+                                        value = 200, min = 10, max = 410),
+                           
+                           helpText("Train + Test must add up to 160"),
+                           helpText("Defining the hyperparameter grid"),
+                           
+                           numericInput("svr_pred_poly",
+                                        "Choose polynomial degree (between 1 to 2).
+                                      Has no effect if kernel is linear",
+                                        min = 1, max = 2, value = 2),
+                           
+                           numericInput("svr_pred_cost",
+                                        "Choose Cost factor (between 1 to 5)",
+                                        min = 1, max = 5, value = 1),
+                           
+                           numericInput("svr_pred_e",
+                                        "Choose e factor (between 0.1 to 0.5)",
+                                        min = 0.1, max = 0.5, value = 0.35),
+                           
+                           selectInput("svr_pred_ke",
+                                       "Select Kernel",
+                                       choices = list("linear" = "linear",
+                                                      "polynomial" = "polynomial"),
+                                       selected = "polynomial"),
+                           
+                           submitButton("Submit"))
+                           
+                       )),
+  
+              # Row 2 - RF Predictions
+              fluidRow(box(title = "RF", solidHeader = TRUE,
+                           collapsible = TRUE, status = "success",
+  
+                           plotOutput("rf_pred")),
+                       
+                       box(title = "Inputs", solidHeader = TRUE,
+                           collapsible = TRUE, status = "success",
+                           
+                           helpText("These inputs control the parameters used to predict cases using
+                                    an Random Forest model"),
+                           helpText("First, choose Data and train/test split"),
+                           
+                           selectizeInput("rf_pred_state", "Choose a single state:",
+                                          c("USA","Alabama", "Alaska", "Arizona", "Arkansas", "California", "Colorado",
+                                            "Connecticut", "Delaware", "District of Columbia", "Florida", "Georgia",
+                                            "Hawaii", "Idaho", "Illinois", "Indiana", "Iowa", "Kansas", "Kentucky",
+                                            "Louisiana", "Maine", "Maryland", "Massachusetts", "Michigan", "Minnesota",
+                                            "Mississippi", "Missouri", "Montana", "Nebraska", "Nevada", "New Hampshire",
+                                            "New Jersey", "New Mexico", "New York", "North Carolina", "North Dakota",
+                                            "Ohio", "Oklahoma", "Oregon", "Pennsylvania", "Rhode Island", "South Carolina",
+                                            "South Dakota", "Tennessee", "Texas", "Utah", "Vermont", "Virginia", "Washington",
+                                            "West Virginia", "Wisconsin", "Wyoming"),
+                                          options = list(maxItems = 1),
+                                          selected = "USA"),
+                           
+                           numericInput("rf_pred_train",
+                                        "Choose size of train data (between 100 to 128)",
+                                        value = 128, min = 100, max = 128),
+                           
+                           numericInput("rf_pred_test",
+                                        "Choose size of test data (between 32 to 60)",
+                                        value = 32, min = 32, max = 60),
+                           
+                           helpText("Train + Test must add up to 160"),
+                           helpText("Defining the hyperparameter grid"),
+                           
+                           numericInput("rf_pred_ntrees",
+                                        "Choose number of trees (between 5 to 10).",
+                                        min = 5, max = 10, value = 5),
+                           
+                           numericInput("rf_pred_featurefrac",
+                                        "Choose feature frac (between 0.5 to 0.75)",
+                                        min = 0.5, max = 0.75, value = 0.5),
+                           
+                           numericInput("rf_pred_minnode",
+                                        "Choose min number of nodes (between 2 to 5)",
+                                        min = 2, max = 5, value = 2),
+                           
+                           submitButton("Submit")
+                           
+                       )),
+  
+              # Row 3 - KNN Predictions
+              fluidRow(box(title = "KNN", solidHeader = TRUE,
+                           collapsible = TRUE, status = "warning",
+  
+                           plotOutput("knn_pred")),
+                       
+                       box(title = "Inputs", solidHeader = TRUE,
+                           collapsible = TRUE, status = "warning",
+                           
+                           helpText("These inputs control the parameters used to predict cases using
+                                    an KNN model"),
+                           helpText("First, choose Data and train/test split"),
+                           
+                           selectizeInput("knn_pred_state", "Choose a single state:",
+                                          c("USA","Alabama", "Alaska", "Arizona", "Arkansas", "California", "Colorado",
+                                            "Connecticut", "Delaware", "District of Columbia", "Florida", "Georgia",
+                                            "Hawaii", "Idaho", "Illinois", "Indiana", "Iowa", "Kansas", "Kentucky",
+                                            "Louisiana", "Maine", "Maryland", "Massachusetts", "Michigan", "Minnesota",
+                                            "Mississippi", "Missouri", "Montana", "Nebraska", "Nevada", "New Hampshire",
+                                            "New Jersey", "New Mexico", "New York", "North Carolina", "North Dakota",
+                                            "Ohio", "Oklahoma", "Oregon", "Pennsylvania", "Rhode Island", "South Carolina",
+                                            "South Dakota", "Tennessee", "Texas", "Utah", "Vermont", "Virginia", "Washington",
+                                            "West Virginia", "Wisconsin", "Wyoming"),
+                                          options = list(maxItems = 1),
+                                          selected = "USA"),
+                           
+                           numericInput("knn_pred_train",
+                                        "Choose size of train data (between 100 to 128)",
+                                        value = 128, min = 100, max = 128),
+                           
+                           numericInput("knn_pred_test",
+                                        "Choose size of test data (between 32 to 60)",
+                                        value = 32, min = 32, max = 60),
+                           
+                           helpText("Train + Test must add up to 160"),
+                           helpText("Defining the hyperparameter grid"),
+                           
+                           numericInput("knn_pred_n",
+                                        "Choose number of neighboors (between 2 to 15).",
+                                        min = 2, max = 15, value = 2),
+                           
+                           submitButton("Submit")
+                           
+                       ))
+        )
       )
-    )
   )
-)
+
   
 dashboardPage(skin = "black",
   dashboardHeader(title = "COVID-19 Dashboard"),
