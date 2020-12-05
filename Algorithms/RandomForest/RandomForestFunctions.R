@@ -20,7 +20,8 @@ reg_tree_imp <- function(formula, data, minsize) {
   # handle formula
   #if(class(formula)!="formula"){formula <- as.formula(formula)}
   #formula <- terms.formula(formula)
-  
+  sse_var <- sse_var
+
   # get the design matrix
   X <- model.matrix(formula, data)
   
@@ -165,10 +166,14 @@ run_rf <- function(formula, n_trees, feature_frac, data, min_node) {
   library(foreach)
   library(doParallel)
   ## Create our forest in parallel
+  reg_tree_imp <- reg_tree_imp
+  sse_var <- sse_var
+  
+  ## Create our forest in parallel
   trees <- foreach::foreach(i=1:n_trees, .errorhandling = "remove")  %dopar%{
     # extract features
     features <- all.vars(formula)[-1]
-    
+
     # extract target
     target <- all.vars(formula)[1]
     # bag the data
