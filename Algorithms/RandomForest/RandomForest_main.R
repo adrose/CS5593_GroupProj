@@ -8,7 +8,7 @@ library(doParallel)
 source("./Algorithms/RandomForest/RandomForestFunctions.R")
 
 source("./Algorithms/RandomForest/RandomForestFunctions.R")
-states <- c("Alabama", "Alaska", "Arizona", "Arkansas", "California", "Colorado",
+states <- c("USA", "Alabama", "Alaska", "Arizona", "Arkansas", "California", "Colorado",
             "Connecticut", "Delaware", "District.of.Columbia", "Florida", "Georgia",
             "Hawaii", "Idaho", "Illinois", "Indiana", "Iowa", "Kansas", "Kentucky",
             "Louisiana", "Maine", "Maryland", "Massachusetts", "Michigan", "Minnesota",
@@ -23,7 +23,7 @@ in.dat <- read.csv("./Data Outputs/combined_processed_data.csv")
 
 ## Train the model
 # Declare outcome state of interest
-Y <- "Colorado"
+Y <- "USA"
 x.vars <-colnames(in.dat)[which(colnames(in.dat) %in%   states == FALSE)[-1]]
 form.val <- as.formula(paste(Y, "~", paste(x.vars, collapse = "+")))
 
@@ -33,7 +33,7 @@ run.mod <- function(inState, n_trees=25, feature_frac=.5, data=in.dat, min_node=
   ## First declare the model
   x.vars <-colnames(in.dat)[which(colnames(in.dat) %in%   states == FALSE)[-1]]
   form.val <- as.formula(paste(inState, "~", paste(x.vars, collapse = "+")))
-  
+
   ## Now train the model
   mod.out <- run_rf(formula=form.val, n_trees = n_trees, feature_frac = feature_frac, data=data, min_node=min_node)
   ## Return the model
@@ -48,7 +48,7 @@ for(i in 2:nrow(all.perm)){
   n_tree <- all.perm$Var1[i]
   feature_frac <- all.perm$Var2[i]
   min_node <- all.perm$Var3[i]
-  all_states1 <- mclapply(states, function(x)run.mod(inState = x, data=in.dat[1:40,], n_trees = n_tree, feature_frac = feature_frac,min_node = min_node), mc.cores = 4)
+  all_states1 <- mclapply(states, function(x)run.mod(inState = x, data=in.dat[1:40,], n_trees = 5, feature_frac = .75 ,min_node = 10), mc.cores = 1)
   all_states2 <- mclapply(states, function(x)run.mod(inState = x, data=in.dat[1:80,], n_trees = n_tree, feature_frac = feature_frac,min_node = min_node), mc.cores = 4)
   all_states3 <- mclapply(states, function(x)run.mod(inState = x, data=in.dat[1:120,], n_trees= n_tree, feature_frac = feature_frac,min_node = min_node), mc.cores = 4)
   ## Now validate them
