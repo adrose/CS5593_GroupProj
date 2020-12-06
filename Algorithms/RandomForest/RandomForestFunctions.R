@@ -12,16 +12,10 @@ sse_var <- function(x, y) {
 }
 
 ## Now create a function which will create the regression trees
-reg_tree_imp <- function(formula, data, minsize) {
-
-  # coerce to data.frame
-  #data <- as.data.frame(data)
-
-  # handle formula
-  #if(class(formula)!="formula"){formula <- as.formula(formula)}
-  #formula <- terms.formula(formula)
+reg_tree_imp<-function(formula, data, minsize) {
+  
   sse_var <- sse_var
-
+  
   # get the design matrix
   X <- model.matrix(formula, data)
 
@@ -162,10 +156,14 @@ reg_tree_imp <- function(formula, data, minsize) {
 ## Now create a function which will train the random forest
 # load plyr
 run_rf <- function(formula, n_trees, feature_frac, data, min_node) {
-  ## Source parallel environment libraries
-  library(foreach)
-  library(doParallel)
   ## Create our forest in parallel
+  
+  # Hey Adon, for some reason, your code doesn't recognize these functions(?)
+  # After googling, seems like foreach requires that they are called again explicitly.
+  # Dunno why, but it worked when I adapted it to
+  # my rolling_cross_validation.R function for the GUI - Ricardo
+  # Also, not sure where it goes but I'm trying here.
+  
   reg_tree_imp <- reg_tree_imp
   sse_var <- sse_var
 
@@ -177,7 +175,7 @@ run_rf <- function(formula, n_trees, feature_frac, data, min_node) {
     trees <- foreach::foreach(i=all_trees, .errorhandling = "remove")  %do%{
       # extract features
       features <- all.vars(formula)[-1]
-  
+
       # extract target
       target <- all.vars(formula)[1]
       # bag the data
@@ -233,13 +231,12 @@ run_rf <- function(formula, n_trees, feature_frac, data, min_node) {
     }
   }
   # extract fit
-  fits <- NULL
-  # Update n_trees in case any failed
-  n_trees <- length(trees)
+  fits <- NULL 
   for(i in 1:n_trees){fits <- cbind(fits, trees[[i]]$fit)}
   # calculate the final fit as a mean of all regression trees
   rf_fit <- apply(fits, 1, function(x) mean(x, na.rm=T))
   # extract the feature importance
+
   imp_full <- trees[[1]]$imp
   for(i in 2:n_trees){imp_full <- merge(imp_full, trees[[i]]$imp, by="features", suffixes = c("", i))}
   # build the mean feature importance between all trees

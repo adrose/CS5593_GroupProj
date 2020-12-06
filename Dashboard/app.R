@@ -251,9 +251,11 @@ server <- function(input, output){
       state <- input$rf_state
       Y <- as.data.frame(data[, state])
       colnames(Y) <- colnames(data[state])
-  
+      Y <- scale(Y)
+      
       # X is not UI dependent
       X <- data[, 54:ncol(data)]
+      X <- scale(X)
       
       # Extracting values for cross validation
       start_size = input$rf_start_size
@@ -325,9 +327,11 @@ server <- function(input, output){
       # Extracting chosen state
       state <- input$knn_state
       Y <- data[, state]
-  
+      Y <- as.numeric(scale(Y))
+      
       # X is not UI dependent
       X <- data[, 54:ncol(data)]
+      X <- as.data.frame(scale(X))
       
       # Extracting cross validation parameters
       start_size <- input$knn_start_size
@@ -533,9 +537,11 @@ server <- function(input, output){
       
       # Defining Y
       Y <- data[, state]
+      Y <- as.numeric(scale(Y))
       
       # Extracting X
       X <- data[, 54:ncol(data)]
+      X <- as.data.frame(scale(X))
       
       ##########################
       # Now, defining the train/test data
